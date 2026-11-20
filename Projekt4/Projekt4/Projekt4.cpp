@@ -1,0 +1,105 @@
+#pragma warning (disable: 4996)
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <windows.h>
+
+
+#define MAX_LINE 100
+#define POLA 3
+
+typedef char* Wiersz[POLA];   
+
+Wiersz* wczytaj(const char* nazwa, int* ile)
+{
+	int cap = 3, n = 0;
+	char bufor[MAX_LINE];
+	FILE* fd = fopen(nazwa, "r");
+	Wiersz* d = malloc(cap * sizeof(Wiersz));
+
+	while (fgets(bufor, MAX_LINE, fd))
+	{
+		if (n == cap)
+		{
+			cap *= 2;
+			d = realloc(d, cap * sizeof(Wiersz));
+		}
+
+		int j = 0;
+		do
+		{
+			bufor[strcspn(bufor, "\r\n")] = '\0';
+			d[n][j] = malloc(strlen(bufor) + 1);
+			strcpy(d[n][j], bufor);
+			j++;
+		} while (j < POLA && fgets(bufor, MAX_LINE, fd));
+
+		n++;
+	}
+
+	fclose(fd);
+	*ile = n;
+	return d;
+}
+void dodaj(Wiersz** d, int* n, int* cap,
+	const char* a, const char* b, const char* c)
+{
+	if (*n == *cap)
+	{
+		*cap *= 2;
+		*d = realloc(*d, *cap * sizeof(Wiersz));
+	}
+
+	(*d)[*n][0] = malloc(strlen(a) + 1);
+	strcpy((*d)[*n][0], a);
+
+	(*d)[*n][1] = malloc(strlen(b) + 1);
+	strcpy((*d)[*n][1], b);
+
+	(*d)[*n][2] = malloc(strlen(c) + 1);
+	strcpy((*d)[*n][2], c);
+
+	(*n)++;
+}
+void pobierzdane(Wiersz* tab, int i)
+{
+	printf("%d: [%s] [%s] [%s]\n", i, tab[i-1][0], tab[i-1][1], tab[i-1][2]);
+}
+void wyszukaj(Wiersz* tab, int n, const char* imie, const char* nazwisko, const char* rok)
+{
+	if (imie == NULL && nazwisko == NULL && rok == NULL)
+	{
+		printf("Brak danych do wyszukania.\n");
+		return;
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		if ((imie == NULL || strcmp(tab[i][0], imie) == 0) &&
+			(nazwisko == NULL || strcmp(tab[i][1], nazwisko) == 0) &&
+			(rok == NULL || strcmp(tab[i][2], rok) == 0))
+		{
+			printf("%d: [%s] [%s] [%s]\n", i + 1, tab[i][0], tab[i][1], tab[i][2]);
+		}
+	}
+}
+
+int main(void)
+{
+	SetConsoleOutputCP(CP_UTF8);
+	int cap = 3, n = 0,id;
+	char imie[MAX_LINE], nazwisko[MAX_LINE], rok[MAX_LINE];
+	//scanf("%s %s %s", imie, nazwisko, rok);
+	Wiersz* tab = wczytaj("dane.txt", &n);
+	//dodaj(&tab, &n, &cap, imie, nazwisko, rok);
+	//for (int i = 0; i < n; i++)
+	//	printf("%d: [%s] [%s] [%s]\n", i, tab[i][0], tab[i][1], tab[i][2]);
+	//scanf("%d", &id);
+	//pobierzdane(tab, id);
+	wyszukaj(tab, n, "Jakub", "Nowak", NULL);
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < POLA; j++)
+			free(tab[i][j]);
+	free(tab);
+	return 0;
+}
